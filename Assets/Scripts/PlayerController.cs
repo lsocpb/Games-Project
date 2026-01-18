@@ -5,41 +5,59 @@ public class SoldierController : MonoBehaviour
     public float moveSpeed = 4.0f;
     public float rotationSpeed = 100.0f;
 
-    // Miejsce na dźwięk (Audio Source)
+    public Transform gunMuzzle;
+    public GameObject hitEffect; // PAMIĘTAJ: Przypisz tu prefab iskier w Inspektorze!
+
     private AudioSource audioSource;
     private Animator animator;
 
     void Start()
     {
         animator = GetComponent<Animator>();
-        // Pobieramy AudioSource, który przed chwilą dodałeś
         audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
     {
-        // --- 1. RUCH (To co było) ---
+        // RUCH
         float v = Input.GetAxis("Vertical");
         float h = Input.GetAxis("Horizontal");
-
         transform.Translate(Vector3.forward * v * moveSpeed * Time.deltaTime);
         transform.Rotate(Vector3.up * h * rotationSpeed * Time.deltaTime);
-
         animator.SetFloat("Speed", Mathf.Abs(v));
 
-        // --- 2. STRZELANIE (Nowość) ---
-        // "Fire1" to domyślnie Lewy Przycisk Myszy lub lewy Ctrl
+        // STRZELANIE
         if (Input.GetButtonDown("Fire1"))
         {
-            // Odpalamy animację
-            animator.SetTrigger("Shoot");
+            Shoot();
+        }
+    }
 
-            // Odpalamy dźwięk (jeśli jakiś jest przypisany)
-            if (audioSource != null && audioSource.clip != null)
+    void Shoot()
+    {
+        animator.SetTrigger("Shoot");
+        if (audioSource != null && audioSource.clip != null)
+        {
+            audioSource.PlayOneShot(audioSource.clip);
+        }
+
+        RaycastHit hit;
+        if (Physics.Raycast(gunMuzzle.position, gunMuzzle.forward, out hit, 100f))
+        {
+            // 1. Pokaż efekt trafienia (iskry) w miejscu uderzenia
+            if (hitEffect != null)
             {
-                // PlayOneShot jest lepsze do strzałów, bo pozwala 
-                // nałożyć na siebie kilka dźwięków, jak klikasz szybko
-                audioSource.PlayOneShot(audioSource.clip);
+                Instantiate(hitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+            }
+
+            // 2. Sprawdź, czy trafiliśmy we wroga z systemem zdrowia
+            // Pobieramy skrypt EnemyHealth z obiektu, w który trafiliśmy
+            EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
+
+            if (enemy != null)
+            {
+                // Zadaj 1 punkt obrażeń
+                enemy.TakeDamage(1);
             }
         }
     }
