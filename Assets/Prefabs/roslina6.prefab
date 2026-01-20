@@ -69,6 +69,10 @@ PrefabInstance:
       value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 5074512353664290214, guid: 345c621485b377b4f9477031c24090be, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 760660772b73f714db19565bd016ec05, type: 2}
+    - target: {fileID: 5074512353664290214, guid: 345c621485b377b4f9477031c24090be, type: 3}
       propertyPath: 'm_BlendShapeWeights.Array.data[0]'
       value: 0
       objectReference: {fileID: 0}

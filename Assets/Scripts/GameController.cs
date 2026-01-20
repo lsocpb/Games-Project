@@ -1,54 +1,86 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Potrzebne do zmiany scen
+using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameController : MonoBehaviour
 {
-    // Tutaj przypiszemy nasz panel pauzy w Unity
+    // PAUZA
+    [Header("Pause UI")]
     public GameObject pausePanel;
-
-    // Zmienna, która pamiêta, czy gra jest spauzowana
     private bool isPaused = false;
+
+    // LICZNIK ROSLIN (UI)
+    [Header("Plants Counter UI")]
+    public TMP_Text plantsCounterText;
+
+    private int totalPlants = 0;
+    private int destroyedPlants = 0;
+
+    void Start()
+    {
+        // Przy generowaniu runtime liczymy total przez spawner
+        totalPlants = 0;
+        destroyedPlants = 0;
+        UpdatePlantsUI();
+    }
 
     void Update()
     {
-        // Sprawdzamy, czy wciœniêto ESC
+        // ESC
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (isPaused)
-            {
-                ResumeGame(); // Jak jest pauza -> wznów
-            }
-            else
-            {
-                PauseGame(); // Jak gra -> pauzuj
-            }
+            if (isPaused) ResumeGame();
+            else PauseGame();
         }
     }
 
+    // ---- PAUZA ----
     public void PauseGame()
     {
-        pausePanel.SetActive(true); // Poka¿ panel
-        Time.timeScale = 0f; // ZATRZYMAJ CZAS w grze (fizyka staje)
+        if (pausePanel != null) pausePanel.SetActive(true);
+        Time.timeScale = 0f;
         isPaused = true;
     }
 
     public void ResumeGame()
     {
-        pausePanel.SetActive(false); // Ukryj panel
-        Time.timeScale = 1f; // Wznów czas
+        if (pausePanel != null) pausePanel.SetActive(false);
+        Time.timeScale = 1f;
         isPaused = false;
     }
 
     public void SaveGame()
     {
-        // Symulacja zapisu (zgodnie z wymaganiami)
-        Debug.Log("ZAPISYWANIE GRY... [Symulacja slotów]");
-        // Tu w przysz³oœci by³by kod zapisuj¹cy pozycjê gracza
+        Debug.Log("ZAPISYWANIE GRY... [Symulacja slot w]");
     }
 
     public void BackToMenu()
     {
-        Time.timeScale = 1f; // Wa¿ne! Zanim wyjdziemy, wznów czas, bo zostanie zatrzymany w menu!
-        SceneManager.LoadScene("Menu"); // Wróæ do sceny 0
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Menu");
+    }
+
+    // ---- RO LINY: API dla spawnera i EnemyHealth ----
+    public void RegisterSpawnedPlant()
+    {
+        totalPlants++;
+        UpdatePlantsUI();
+    }
+
+    public void RegisterDestroyedPlant()
+    {
+        destroyedPlants++;
+        UpdatePlantsUI();
+    }
+
+    private void UpdatePlantsUI()
+    {
+        int left = Mathf.Max(0, totalPlants - destroyedPlants);
+
+        if (plantsCounterText != null)
+        {
+            plantsCounterText.text =
+                $"Plants: \n{destroyedPlants} destroyed \n{left} left \n{totalPlants} total";
+        }
     }
 }

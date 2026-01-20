@@ -11,23 +11,29 @@ public class FlowerSpawner : MonoBehaviour
     [SerializeField] private Vector2 size = new Vector2(30f, 30f);
 
     [Header("Ground sampling")]
-    [SerializeField] private float rayStartHeight = 200f;   // jak wysoko startuje promień
-    [SerializeField] private float rayLength = 500f;        // jak daleko w dół szuka
-    [SerializeField] private LayerMask groundMask;          // warstwa terenu/ziemi
-    [SerializeField] private float surfaceOffset = 0.02f;   // żeby nie wchodziło w ziemię
+    [SerializeField] private float rayStartHeight = 200f;
+    [SerializeField] private float rayLength = 500f;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private float surfaceOffset = 0.02f;
 
     [Header("No overlap (optional)")]
     [SerializeField] private bool avoidOverlap = true;
     [SerializeField] private float minDistance = 1.2f;
-    [SerializeField] private LayerMask blockingMask;        // np. warstwa Flower + przeszkody
+    [SerializeField] private LayerMask blockingMask;
     [SerializeField] private int maxAttemptsPerFlower = 40;
 
     [Header("Rotation / Parent")]
-    [SerializeField] private bool alignToNormal = true;     // obrót wg nachylenia terenu
+    [SerializeField] private bool alignToNormal = true;
     [SerializeField] private bool randomYRotation = true;
     [SerializeField] private Transform parentForSpawned;
 
-    private void Start() => Spawn();
+    private GameController gameController;
+
+    private void Start()
+    {
+        gameController = FindObjectOfType<GameController>();
+        Spawn();
+    }
 
     public void Spawn()
     {
@@ -55,7 +61,17 @@ public class FlowerSpawner : MonoBehaviour
                 if (randomYRotation)
                     rot = rot * Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
-                Instantiate(flowerPrefab, pos, rot, parentForSpawned);
+                GameObject flower = Instantiate(flowerPrefab, pos, rot, parentForSpawned);
+
+                // Podaj GameController do EnemyHealth (żeby nie robił Find w runtime)
+                EnemyHealth eh = flower.GetComponent<EnemyHealth>();
+                if (eh != null)
+                    eh.SetGameController(gameController);
+
+                // Zwiększ total roślin
+                if (gameController != null)
+                    gameController.RegisterSpawnedPlant();
+
                 spawned++;
             }
         }
@@ -74,7 +90,7 @@ public class FlowerSpawner : MonoBehaviour
         if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, rayLength, groundMask, QueryTriggerInteraction.Ignore))
         {
             normal = hit.normal;
-            position = hit.point + hit.normal * surfaceOffset; // lekko nad powierzchnię
+            position = hit.point + hit.normal * surfaceOffset;
             return true;
         }
 
